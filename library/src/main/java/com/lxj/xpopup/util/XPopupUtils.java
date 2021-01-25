@@ -354,22 +354,22 @@ public class XPopupUtils {
         }
     }
 
-    private static Context mContext;
-
     public static void saveBmpToAlbum(final Context context, final XPopupImageLoader imageLoader, final Object uri) {
+        if (context == null) return;
+
         final Handler mainHandler = new Handler(Looper.getMainLooper());
         final ExecutorService executor = Executors.newSingleThreadExecutor();
-        mContext = context;
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                File source = imageLoader.getImageFile(mContext, uri);
+                File source = imageLoader.getImageFile(context, uri);
                 if (source == null) {
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(mContext, "图片不存在！", Toast.LENGTH_SHORT).show();
-                            mContext = null;
+                            if (context != null) {
+                                Toast.makeText(context, "图片不存在！", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
                     return;
@@ -386,17 +386,17 @@ public class XPopupUtils {
                     target.createNewFile();
                     //2. save
                     writeFileFromIS(target, new FileInputStream(source));
+                    if (context == null) return;
                     //3. notify
-                    MediaScannerConnection.scanFile(mContext, new String[]{target.getAbsolutePath()},
+                    MediaScannerConnection.scanFile(context, new String[]{target.getAbsolutePath()},
                             new String[]{"image/" + ext}, new MediaScannerConnection.OnScanCompletedListener() {
                                 @Override
                                 public void onScanCompleted(final String path, Uri uri) {
                                     mainHandler.post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            if(mContext!=null){
-                                                Toast.makeText(mContext, "已保存到相册！", Toast.LENGTH_SHORT).show();
-                                                mContext = null;
+                                            if (context != null) {
+                                                Toast.makeText(context, "已保存到相册！", Toast.LENGTH_SHORT).show();
                                             }
                                         }
                                     });
@@ -407,8 +407,9 @@ public class XPopupUtils {
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(mContext, "没有保存权限，保存功能无法使用！", Toast.LENGTH_SHORT).show();
-                            mContext = null;
+                            if (context != null) {
+                                Toast.makeText(context, "没有保存权限，保存功能无法使用！", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
                 }
